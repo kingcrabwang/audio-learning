@@ -1,0 +1,9 @@
+{
+  "folders": [
+    { "path": "audio_base" }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/home/kincrab/miniconda3/envs/audio-learning/bin/python",
+    "python.terminal.activateEnvironment": true
+  }
+}
