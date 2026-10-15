@@ -1,6 +1,11 @@
 {
   "folders": [
-    { "path": "audio_base" }
+    {
+      "path": "audio_base"
+    },
+    {
+      "path": "DSP_Tool"
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "/home/kincrab/miniconda3/envs/audio-learning/bin/python",

@@ -1,0 +1,29 @@
+# ===================================================================
+# .gitattributes —— 规定 git 该怎么处理文件的换行符和二进制属性
+#
+# 为什么需要它：
+#   同样是"换行"，Windows 用 CRLF（\r\n），Linux/macOS 用 LF（\n）。
+#   你在 Windows 和 WSL 两边都写代码，如果不管，
+#   git 会把整份文件当成"被修改过"，产生一堆你根本没动过的假改动。
+#   这个文件把规则固定下来，两边就一致了。
+# ===================================================================
+
+# 仓库里统一用 LF 保存，签出到工作区也用 LF。
+# text=auto 表示"由 git 自动判断这是不是文本文件"。
+* text=auto eol=lf
+
+# ---------- 二进制文件：禁止任何换行转换 ----------
+# 二进制文件里如果被动了字节，文件就彻底损坏了（wav 打不开就是这个原因）。
+*.wav   binary
+*.mp3   binary
+*.flac  binary
+*.ogg   binary
+*.m4a   binary
+*.aiff  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.pyc   binary
