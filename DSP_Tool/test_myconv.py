@@ -18,7 +18,11 @@ import numpy as np
 # （等以后习惯了包导入，这几行可以删掉，改用 from DSP_Tool.myconv import myconv）
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from myconv import myconv  # noqa: E402  必须在调整 sys.path 之后再导入
+from myconv import (  # noqa: E402  必须在调整 sys.path 之后再导入
+    conv_full_reference,
+    conv_full_vectorized,
+    myconv,
+)
 
 MODES = ("full", "same", "valid")
 RNG_SEED = 0          # 固定随机种子，保证每次跑出来的用例完全一样
@@ -85,6 +89,36 @@ def test_random_cases():
             )
 
 
+def test_vectorized_matches_reference():
+    """向量化实现必须和双重循环参考实现【逐位】相同。
+
+    为什么这条测试值得单独占一个位置：
+    浮点加法不满足结合律——(a+b)+c 和 a+(b+c) 可能差最后几位。
+    移位累加之所以还能逐位相同，是因为对某个输出点而言，
+    各项仍然是按 m 递增的顺序累加进去的，和参考实现一模一样，
+    而且两者都从 0.0 起算。求和顺序没变，结果才没变。
+
+    这条测试就是在钉死这个前提：以后谁改了累加顺序
+    （比如把外层循环改成倒序），它会立刻报错。
+
+    这里刻意用 np.array_equal 而不是 np.allclose：
+    allclose 会容忍末位误差，而"顺序被改动"恰恰只体现为末位误差，
+    用 allclose 就正好把要测的东西漏掉了。
+    """
+    rng = np.random.default_rng(RNG_SEED)
+    for _ in range(N_RANDOM_CASES):
+        n = int(rng.integers(1, 16))
+        m = int(rng.integers(1, 16))
+        sig = rng.uniform(-10, 10, size=n)
+        ker = rng.uniform(-10, 10, size=m)
+        got = conv_full_vectorized(sig, ker)
+        expect = conv_full_reference(sig, ker)
+        assert np.array_equal(got, expect), (
+            f"两个 full 实现结果不同：len(sig)={n}, len(ker)={m}\n"
+            f"vectorized={got}\nreference ={expect}"
+        )
+
+
 def test_invalid_input():
     """非法输入必须报 ValueError。
 
@@ -110,6 +144,7 @@ ALL_TESTS = [
     test_basic_cases,
     test_kernel_longer_than_signal,
     test_random_cases,
+    test_vectorized_matches_reference,
     test_invalid_input,
 ]
 

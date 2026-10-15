@@ -8,7 +8,7 @@
 ```bash
 conda env create -f environment.yml     # 只有第一次需要
 conda activate audio-learning
-python DSP_Tool/test_myconv.py          # 应看到 4 个 [PASS]、退出码 0
+python DSP_Tool/test_myconv.py          # 应看到 5 个 [PASS]、退出码 0
 ```
 
 ## 这是什么
@@ -53,7 +53,7 @@ conda activate audio-learning
 python DSP_Tool/test_myconv.py
 ```
 
-看到 4 个 `[PASS]` 且退出码为 0，就说明卷积实现是对的。
+看到 5 个 `[PASS]` 且退出码为 0，就说明卷积实现是对的。
 这个脚本也能交给 pytest：`pytest DSP_Tool/test_myconv.py`。
 
 ### 2. 生成音频文件、观察波形
@@ -101,8 +101,8 @@ y = chirp_wave(f0=200, f1=2000, sr=44100, duration=3.0)
 
 ### `DSP_Tool/myconv.py`
 
-`myconv(x, h, mode)` 手写一维离散卷积，按定义 `y[n] = Σ x[n-m] · h[m]`
-用双重循环实现，**不调用** `np.convolve` 或 `scipy.signal` 的卷积函数。
+`myconv(x, h, mode)` 手写一维离散卷积，**不调用** `np.convolve`
+或 `scipy.signal` 的卷积函数。
 
 三种模式的语义与 `numpy.convolve` / MATLAB `conv` 对齐（记 N = len(x)，M = len(h)）：
 
@@ -121,6 +121,39 @@ myconv([1, 2, 3], [1, 2], mode="valid")    # array([4., 7.])
 
 > 注意 `full` 模式下 `h` **不做翻转** —— `x[n-m]` 这个下标本身已经含有反转，
 > 再手动翻一次就变成互相关（correlation）了。这是最容易写错的一处。
+
+#### 同一个 full 卷积，留了两个实现
+
+模块里并存两条路径，结果**逐位相同**：
+
+| 函数 | 写法 | 说明 |
+|---|---|---|
+| `conv_full_vectorized` | 移位累加 | `myconv` 默认走这条，快 |
+| `conv_full_reference` | 双重循环 | 照抄定义，慢，留作对照基准 |
+
+向量化的思路是换个提问角度：不问「第 n 个输出点 y[n] 是多少」，
+而问「第 m 个抽头 h[m] 给整个输出贡献了什么」。
+固定 m 只看 `h[m] * x[n-m]` 这一项，它随 n 平移，
+正好是**整条 x 乘上标量 h[m]、搬到输出位置 `[m, m+N-1]`**：
+
+```python
+full_res = np.zeros(N + M - 1)
+for m in range(M):                      # 只循环 M 次，不是 N 次
+    full_res[m : m + N] += h[m] * x
+```
+
+**乘加总次数两个实现完全一样**（都是 N·M 次）。快的不是算得少，
+而是 Python 层的循环次数从 N 降到 M，剩下的交给 numpy 的 C 代码批量做：
+x 长 132300、核长 101 时，Python 层循环从 1300 万次降到 101 次。
+
+之所以还能**逐位相同**：浮点加法不满足结合律，换求和顺序本该改变末位结果；
+但这里对某个输出点而言，各项仍按 m 递增的顺序累加，两者都从 0.0 起算，
+求和顺序没变。所以测试里用的是 `np.array_equal`（不容忍误差），
+而不是通常的 `np.allclose` —— 后者恰好会把「顺序被改动」这类问题放过。
+
+那为什么慢的还要留着？读 `conv_full_reference` 能**直接看到卷积的定义本身**，
+不用在脑子里反推向量化那几行在算什么；而且以后优化算法时，
+它就是现成的标准答案 —— `test_vectorized_matches_reference` 做的正是这件事。
 
 ## 开发约定
 
@@ -151,8 +184,9 @@ git push
 
 ## 待改进
 
-- [ ] `myconv` 的 `full` 模式是 O(N·M) 的纯 Python 双重循环，信号长时会明显变慢
-      （可以改成 `full_res[k:k+N] += h[k] * x` 这种向量化写法，仍是手写、不调用现成卷积）
+- [ ] `full` 卷积仍是 O(N·M)。抽头很长时可以改用 FFT
+      （卷积定理：时域卷积 = 频域相乘，复杂度降到 O(L log L)）；
+      代价是结果不再逐位相同，只能保证到约 1e-12 的相对误差
 - [ ] 清理本地的孤儿文件 `audio_base/test_440hz.wav`（没有任何脚本生成它）
 - [ ] 把测试挪到 `tests/` 目录，并给 `audio_base` 也补上 pytest 测试
 - [ ] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
