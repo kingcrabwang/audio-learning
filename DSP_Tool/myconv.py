@@ -40,11 +40,25 @@ def _validate_1d(x, h):
             f"输入序列 x 必须是非空一维数值序列，当前 dtype={np.asarray(x).dtype}, "
             f"shape={np.asarray(x).shape}"
         )
+        # 安全获取诊断信息：x 可能完全无法转数组（如 object()），
+        # 直接 np.asarray(x) 会抛新异常，掩盖原始错误。
+        try:
+            arr = np.asarray(x)
+            detail = f"dtype={arr.dtype}, shape={arr.shape}"
+        except Exception:
+            detail = f"type={type(x).__name__}"
+        raise ValueError(f"输入序列 x 必须是非空一维数值序列，当前 {detail}")
     if not _is_1d(h):
         raise ValueError(
             f"卷积核 h 必须是非空一维数值序列，当前 dtype={np.asarray(h).dtype}, "
             f"shape={np.asarray(h).shape}"
         )
+        try:
+            arr = np.asarray(h)
+            detail = f"dtype={arr.dtype}, shape={arr.shape}"
+        except Exception:
+            detail = f"type={type(h).__name__}"
+        raise ValueError(f"卷积核 h 必须是非空一维数值序列，当前 {detail}")
 
 
 def conv_full_vectorized(x, h):
@@ -152,7 +166,7 @@ def myconv(x, h, mode="full"):
     if mode == "valid":
         return full_res[min(N, M) - 1 : max(N, M)]
 
-    # mode == "same"：长度取较长者，居中截取
+    # same 模式的语义是"输出长度 = 较长输入的长度"，截取中心时偏移量基于较短者。
     length, shorter = max(N, M), min(N, M)
     start = (shorter - 1) // 2
     return full_res[start : start + length]

@@ -66,6 +66,120 @@ def test_kernel_longer_than_signal():
         assert np.allclose(got, expect), (
             f"mode={mode} 数值不对：\nmyconv={got}\nnumpy ={expect}"
         )
+def test_length_one_inputs():
+    """长度为 1 的信号或核——最小合法输入。
+
+    h = [k] 时卷积退化为标量乘法 y = k*x，
+    x = [k] 时卷积退化为 k*h。
+    这种情况下 valid 应返回与 full 相同的结果（min(N,M)-1 == 0）。
+    """
+    cases = [
+        ([3, 5, 7], [2]),       # 核长度 1
+        ([2], [3, 5, 7]),       # 信号长度 1
+        ([5], [3]),             # 双方都是 1
+    ]
+    for sig, ker in cases:
+        for mode in MODES:
+            got = myconv(sig, ker, mode=mode)
+            expect = np.convolve(sig, ker, mode=mode)
+            assert got.shape == expect.shape, (
+                f"sig={sig}, ker={ker}, mode={mode}: "
+                f"shape {got.shape} != {expect.shape}"
+            )
+            assert np.allclose(got, expect), (
+                f"sig={sig}, ker={ker}, mode={mode}: "
+                f"myconv={got}, numpy={expect}"
+            )
+
+
+def test_equal_length():
+    """信号和核等长时，valid 模式只输出 1 个元素。
+
+    这是 valid 切片最容易出 off-by-one 错误的场景：
+    full_res[N-1 : N] 只取 1 个元素，写成 full_res[N-1:N-1] 就是空的。
+    """
+    for length in [1, 2, 3, 5, 8]:
+        sig = list(range(1, length + 1))
+        ker = list(range(1, length + 1))
+        for mode in MODES:
+            got = myconv(sig, ker, mode=mode)
+            expect = np.convolve(sig, ker, mode=mode)
+            assert got.shape == expect.shape, (
+                f"equal length={length}, mode={mode}: "
+                f"shape {got.shape} != {expect.shape}"
+            )
+            assert np.allclose(got, expect), (
+                f"equal length={length}, mode={mode}: "
+                f"myconv={got}, numpy={expect}"
+            )
+
+
+def test_impulse_properties():
+    """利用卷积的数学性质做边界验证。
+
+    1. x * δ[n] = x             （与单位脉冲卷积 = 恒等）
+    2. x * δ[n-k] = x 右移 k 位  （延迟脉冲 = 移位）
+    3. x * 0 = 0                 （与零卷积 = 零）
+    """
+    sig = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+
+    # 性质 1：与 δ 卷积 = 恒等
+    delta = np.array([1.0])
+    result = myconv(sig, delta, mode="full")
+    assert np.array_equal(result, sig), f"δ 卷积失败: {result}"
+
+    # 性质 2：与延迟脉冲卷积 = 右移
+    delay1 = np.array([0.0, 1.0])
+    result = myconv(sig, delay1, mode="full")
+    expect = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+    assert np.array_equal(result, expect), f"延迟卷积失败: {result}"
+
+    # 性质 3：与零卷积 = 零
+    zeros = np.array([0.0, 0.0, 0.0])
+    result = myconv(sig, zeros, mode="full")
+    assert np.all(result == 0.0), f"零卷积非零: {result}"
+
+
+def test_extreme_float_values():
+    """极端浮点数值的行为。
+
+    不要求特定结果，但要求行为与 numpy.convolve 一致。
+    """
+    cases = [
+        ("大数", [1e200, 2e200], [3.0]),
+        ("小数", [1e-200, 2e-200], [3e-200]),
+        ("正负混合", [1e100, -1e100], [1.0, 1.0]),
+    ]
+    for name, sig, ker in cases:
+        for mode in MODES:
+            got = myconv(sig, ker, mode=mode)
+            expect = np.convolve(sig, ker, mode=mode)
+            # 用 array_equal 而不是 allclose，因为 allclose 对 inf 等行为不同
+            assert np.array_equal(got, expect) or np.allclose(
+                got, expect, equal_nan=True
+            ), f"{name}, mode={mode}: myconv={got}, numpy={expect}"
+
+
+def test_commutative_property():
+    """卷积交换律：x * h == h * x。
+
+    这不是 numpy 的定义保证的（numpy.convolve 也保证了），
+    但如果你的实现打破了交换律，说明有 bug。
+    """
+    rng = np.random.default_rng(42)
+    for _ in range(50):
+        n = int(rng.integers(1, 20))
+        m = int(rng.integers(1, 20))
+        sig = rng.uniform(-10, 10, size=n)
+        ker = rng.uniform(-10, 10, size=m)
+        for mode in MODES:
+            forward = myconv(sig, ker, mode=mode)
+            reverse = myconv(ker, sig, mode=mode)
+            assert np.allclose(forward, reverse), (
+                f"交换律失败: mode={mode}, len(sig)={n}, len(ker)={m}\n"
+                f"x*h={forward}\nh*x={reverse}"
+            )
+
 
 
 def test_random_cases():
@@ -146,6 +260,11 @@ ALL_TESTS = [
     test_random_cases,
     test_vectorized_matches_reference,
     test_invalid_input,
+    test_length_one_inputs,
+    test_equal_length,
+    test_impulse_properties,
+    test_extreme_float_values,
+    test_commutative_property,
 ]
 
 
