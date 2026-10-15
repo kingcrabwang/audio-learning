@@ -1,0 +1,31 @@
+# conda 环境定义
+#
+# 用法：
+#   第一次创建环境    conda env create -f environment.yml
+#   之后激活环境      conda activate audio-learning
+#
+# 关于版本号：
+#   这里故意【不写死版本号】，这样换一台机器（或换个时间）也能装上兼容的版本。
+#   想看当前环境里实际是什么版本：      conda list
+#   想只导出我手动装的那几个包（推荐）： conda env export --from-history
+#   想导出完整依赖树（含精确版本和构建号，可移植性差）： conda env export
+#
+# 说明：本文件刻意只在【独立行】写注释，不用行尾注释，
+#       避免任何解析歧义。
+
+name: audio-learning
+
+channels:
+  - conda-forge
+
+dependencies:
+  # 与现有环境保持一致（之前的 __pycache__ 是 cpython-310）
+  - python=3.10
+  # 数组运算，同时充当卷积的对照基准
+  - numpy
+  # 画波形图
+  - matplotlib
+  # 读写 wav 文件
+  - soundfile
+  # 用来跑 DSP_Tool/test_myconv.py 里的测试
+  - pytest
