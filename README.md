@@ -1,4 +1,4 @@
-# audio-learning
+# audio-projects
 
 学习 **信号处理基础** 和 **音频基础** 的练习仓库。
 原则是尽量手写实现、不直接调用现成的库函数 —— 目标是**搞明白原理**，而不是把结果算出来。
@@ -156,8 +156,6 @@ git push
 - [ ] 清理本地的孤儿文件 `audio_base/test_440hz.wav`（没有任何脚本生成它）
 - [ ] 把测试挪到 `tests/` 目录，并给 `audio_base` 也补上 pytest 测试
 - [ ] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
-- [ ] 把工作区文件名从 `audio-projects.code-workspace` 改成 `audio-learning.code-workspace`，
-      和仓库名保持一致
 
 ## 许可证
 
