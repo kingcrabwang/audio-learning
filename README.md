@@ -8,7 +8,7 @@
 ```bash
 conda env create -f environment.yml     # 只有第一次需要
 conda activate audio-learning
-python DSP_Tool/test_myconv.py          # 应看到 5 个 [PASS]、退出码 0
+python DSP_Tool/test_myconv.py          # 应看到 10 个 [PASS]、退出码 0
 ```
 
 ## 这是什么
@@ -19,12 +19,14 @@ python DSP_Tool/test_myconv.py          # 应看到 5 个 [PASS]、退出码 0
 |---|---|
 | `audio_base/` | 音频基础：生成正弦 / 扫频信号、读写 wav、画波形 |
 | `DSP_Tool/` | 手写的 DSP 工具集：目前有一维卷积 |
+| `examples/` | 综合演示：正弦 + 噪声 → 滑动平均滤波 → 画原始/滤波对比图 |
+| `doc/` | 学习笔记（纯文本，边学边记） |
 
 设计上刻意把「**纯计算**」和「**读写 / 绘图**」分开：
 `waveforms.py` 只算数，不读文件、不写文件、不弹窗口 —— 所以能直接复用，
 也才好写测试。它只依赖 numpy，不 import matplotlib 或 soundfile。
 
-想看清各目录里有什么：`ls audio_base DSP_Tool`。
+想看清各目录里有什么：`ls audio_base DSP_Tool examples doc`。
 
 ## 环境准备
 
@@ -53,7 +55,7 @@ conda activate audio-learning
 python DSP_Tool/test_myconv.py
 ```
 
-看到 5 个 `[PASS]` 且退出码为 0，就说明卷积实现是对的。
+看到 10 个 `[PASS]` 且退出码为 0，就说明卷积实现是对的。
 这个脚本也能交给 pytest：`pytest DSP_Tool/test_myconv.py`。
 
 ### 2. 生成音频文件、观察波形
@@ -81,6 +83,16 @@ python audio_base/read_wave.py          # 读 chirp.wav，打印信息并画波�
 python audio_base/make_wave.py --help
 python audio_base/make_wave.py sine --freq 440 --sr 48000 --duration 2
 python audio_base/make_wave.py chirp --f0 50 --f1 5000 --out sweep.wav
+```
+
+### 3. 跑滑动平均滤波综合演示
+
+```bash
+conda activate audio-learning
+
+python examples/demo_moving_average.py                # 50Hz 正弦 + 噪声，窗口 15 点
+python examples/demo_moving_average.py --window 31    # 换窗口大小
+python examples/demo_moving_average.py --no-show      # 不弹窗（没有图形界面时用）
 ```
 
 ## 手写实现说明
@@ -187,7 +199,6 @@ git push
 - [ ] `full` 卷积仍是 O(N·M)。抽头很长时可以改用 FFT
       （卷积定理：时域卷积 = 频域相乘，复杂度降到 O(L log L)）；
       代价是结果不再逐位相同，只能保证到约 1e-12 的相对误差
-- [ ] 清理本地的孤儿文件 `audio_base/test_440hz.wav`（没有任何脚本生成它）
 - [ ] 把测试挪到 `tests/` 目录，并给 `audio_base` 也补上 pytest 测试
 - [ ] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
 
