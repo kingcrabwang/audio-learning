@@ -43,7 +43,7 @@ htmlcov/
 
 # ---------- 编辑器 / IDE 配置 ----------
 # .vscode 里存的是"我这台机器用哪个解释器"这类个人设置，
-# 换台机器就失效（你的 .code-workspace 里那个 /home/kincrab/... 路径就是例子）。
+# 换台机器就失效（解释器路径、环境管理器这类设置都是本机专属的）。
 # 想共享的环境信息，请写进 README 或 environment.yml。
 .vscode/
 .idea/
