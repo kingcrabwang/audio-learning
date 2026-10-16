@@ -1,10 +1,7 @@
 {
   "folders": [
     {
-      "path": "audio_base"
-    },
-    {
-      "path": "DSP_Tool"
+      "path": "."
     }
   ],
   "settings": {
