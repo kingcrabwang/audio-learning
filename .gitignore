@@ -24,11 +24,19 @@ dist/
 
 # ---------- 虚拟环境 ----------
 # 环境是"每台机器各自搭"的，体积大，
-# 而且可以用 requirements.txt 一键还原，所以不入库
+# 而且可以用 environment.yml 一键还原（conda env create -f environment.yml），
+# 所以不入库
 .venv/
 venv/
 env/
 .conda/
+
+# ---------- 密钥 / 本机私有配置 ----------
+# .env 是【文件】不是目录：上面的 .venv/ venv/ env/ 全是目录规则，
+# 一条都匹配不到它，所以必须单独写，否则 .env 会被正常纳入版本管理。
+.env
+.env.*
+!.env.example
 
 # ---------- 测试与代码检查工具的缓存 ----------
 .pytest_cache/
@@ -50,7 +58,7 @@ htmlcov/
 *.swp
 
 # ---------- 音频数据 ----------
-# wav / mp3 体积大，而且都能用脚本重新生成（creatWAV.py 之类），
+# wav / mp3 体积大，而且都能用脚本重新生成（dsp-toolbox/examples/make_wave.py），
 # 所以默认不入库。
 # 如果某个小文件确实需要提交，用：git add -f 文件名
 *.wav
@@ -60,6 +68,39 @@ htmlcov/
 *.m4a
 *.aiff
 *.aif
+
+# ---------- 数据集 / 训练产物（monorepo 后期项目）----------
+# 体积大、可重新下载或训练，绝不入库；趁项目还没开工就先写死。
+data/
+datasets/
+checkpoints/
+runs/
+*.pth
+*.pt
+*.onnx
+*.ncnn
+*.tflite
+
+# ---------- 数组 / 日志 / 临时文件 ----------
+# DSP 实验里用 np.save / np.savez 落盘的数组：体积大，且随时能重算
+*.npy
+*.npz
+
+# 运行日志与临时文件
+*.log
+*.tmp
+*.bak
+
+# 合并冲突残留
+*.orig
+*.rej
+
+# Office 打开文档时的锁文件 / LibreOffice 的锁文件
+~$*
+.~lock.*
+
+# VS Code 本地历史（Local History 扩展）
+.history/
 
 # ---------- 操作系统生成的垃圾文件 ----------
 .DS_Store

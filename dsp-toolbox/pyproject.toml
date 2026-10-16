@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dsp-toolbox"
+version = "0.1.0"
+description = "手写 DSP 算法实现 + 与 numpy/scipy 逐点对拍的测试集"
+requires-python = ">=3.10"
+# 运行时只依赖 numpy：硬线 A 规定算法核心不许调 scipy，
+# 所以 scipy 是「参考物」，归到下面的 dev 依赖，而不是运行时依赖。
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+dev = ["pytest", "scipy", "matplotlib", "soundfile"]
+
+[tool.setuptools.packages.find]
+include = ["dsp_toolbox*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]      # 保险：即使还没 pip install -e .，裸跑 pytest 也能导入

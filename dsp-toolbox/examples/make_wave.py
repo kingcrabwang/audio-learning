@@ -20,12 +20,13 @@ from pathlib import Path
 
 import soundfile as sf
 
-try:  # 作为包的一部分被导入时，例如 from audio_base.make_wave import main
+try:  # 被别处以模块方式导入时（本脚本在 examples/ 下，不属于 dsp_toolbox 包）
     from .waveforms import chirp_wave, sine_wave
 except ImportError:  # 直接运行本文件时：python make_wave.py chirp
     from waveforms import chirp_wave, sine_wave
 
-HERE = Path(__file__).resolve().parent
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+SAMPLES.mkdir(exist_ok=True)
 
 __all__ = ["build_parser", "main"]
 
@@ -67,7 +68,7 @@ def main(argv=None):
     else:
         signal = chirp_wave(args.f0, args.f1, args.sr, duration, args.amplitude)
 
-    out = HERE / (args.out or DEFAULT_OUT[args.kind])
+    out = SAMPLES / (args.out or DEFAULT_OUT[args.kind])
     sf.write(str(out), signal, args.sr, subtype="PCM_16")
     print(f"已生成 {out}（{len(signal)} 点，{len(signal) / args.sr:.3f} 秒）")
     return 0

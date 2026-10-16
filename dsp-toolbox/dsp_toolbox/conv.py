@@ -1,6 +1,6 @@
 # myconv.py
 """
-DSP_Tool: 手写一维卷积函数 myconv(x, h, mode)
+dsp_toolbox.conv: 手写一维卷积函数 myconv(x, h, mode)
 
 实现一维离散卷积，支持 full / same / valid 三种模式。
 不调用 np.convolve / scipy.signal 等现成卷积函数。

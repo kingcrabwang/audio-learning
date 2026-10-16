@@ -3,7 +3,7 @@
 读取 wav 文件，打印基本信息，并画出波形。
 
 用法：
-    python read_wave.py                 # 读同目录下的 chirp.wav
+    python read_wave.py                 # 读 dsp-toolbox/samples/chirp.wav
     python read_wave.py 某个文件.wav     # 读指定文件
 
 对应原来的 1readwavefile.py。改了三处：
@@ -20,7 +20,7 @@ import numpy as np
 import soundfile as sf
 
 # 本脚本所在目录。默认文件就找这里，不受「当前工作目录」影响。
-HERE = Path(__file__).resolve().parent
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
 
 __all__ = ["read_wave", "describe", "plot_waveform", "main"]
 
@@ -55,11 +55,11 @@ def plot_waveform(data, sr, title="Waveform"):
 
 
 def main():
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "chirp.wav"
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else SAMPLES / "chirp.wav"
 
     if not path.exists():
         print(f"找不到文件：{path}")
-        print("提示：先运行 python make_wave.py chirp 生成它。")
+        print("提示：先运行 python dsp-toolbox/examples/make_wave.py chirp 生成它。")
         return 1
 
     data, sr = read_wave(path)

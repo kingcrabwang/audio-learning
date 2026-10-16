@@ -13,6 +13,8 @@
 # 说明：本文件刻意只在【独立行】写注释，不用行尾注释，
 #       避免任何解析歧义。
 
+# 环境名沿用 audio-learning（仓库早期即此名）。它只是本机环境的一个标签，
+# 改名需要重建或重命名现有环境，代价大于收益，故有意不随仓库改名同步。
 name: audio-learning
 
 channels:
@@ -21,9 +23,12 @@ channels:
 dependencies:
   # 与现有环境保持一致（之前的 __pycache__ 是 cpython-310）
   - python=3.10
+  # 子项目要用 pip install -e . 做可编辑安装，缺了这两个会失败
+  - pip
+  - setuptools
   # 数组运算，同时充当卷积的对照基准
   - numpy
-    # 求根（tf2zpk）与频响（freqz），用于零极点分析
+  # 求根（tf2zpk）与频响（freqz），用于零极点分析
   - scipy
   # 画波形图
   - matplotlib

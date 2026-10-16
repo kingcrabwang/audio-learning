@@ -1,7 +1,7 @@
 # 学习笔记 01：边界测试、DSP 平滑滤波与 Python 工程规范
 
 > 整理日期：2026-10  
-> 关联代码：[`DSP_Tool/myconv.py`], [`examples/demo_moving_average.py`]
+> 关联代码：[`dsp-toolbox/dsp_toolbox/conv.py`](../dsp-toolbox/dsp_toolbox/conv.py)、[`dsp-toolbox/examples/demo_moving_average.py`](../dsp-toolbox/examples/demo_moving_average.py)
 
 ---
 
@@ -19,24 +19,27 @@
 目前仓库的架构设计已达到非常优秀的工程水准，主要规范体现在：
 
 ```text
-audio-projects/
-├── audio_base/               # [数据源] 音频信号生成与读写（底层支持）
-│   ├── waveforms.py          # 纯数学计算，无副作用
-│   ├── make_wave.py          # 命令行参数解析 + 文件写入
-│   └── read_wave.py          # 命令行参数解析 + 文件读取 + 绘图
-├── DSP_Tool/                 # [核心库] 数字信号处理底层算法
-│   ├── myconv.py             # 一维离散卷积（纯算法，只依赖 numpy）
-│   └── test_myconv.py        # 10 组自动化测试（覆盖常规、边界、数学性质）
-├── examples/                 # [业务层] 综合应用演示
-│   └── demo_moving_average.py# 端到端串联 audio_base + DSP_Tool + 可视化
-├── README.md                 # 完整的项目说明与快速上手
-└── environment.yml           # Conda 环境依赖锁定
+audio-projects/                        # monorepo：整个学习项目
+├── docs/                              # 跨项目学习笔记
+├── environment.yml                    # 唯一的 conda 环境（audio-learning）
+├── README.md
+└── dsp-toolbox/                       # 子项目 1（W1–W7），有自己的 SPEC.md 与 README.md
+    ├── dsp_toolbox/                   # [核心库] 纯算法，只依赖 numpy
+    │   ├── conv.py                    # 一维离散卷积（纯算法）
+    │   └── signals.py                 # 纯数学计算，无副作用
+    ├── tests/
+    │   └── test_conv.py               # 10 组自动化测试（覆盖常规、边界、数学性质）
+    ├── examples/                      # [业务层] CLI 脚本与演示
+    │   ├── make_wave.py               # 命令行参数解析 + 文件写入
+    │   ├── read_wave.py               # 命令行参数解析 + 文件读取 + 绘图
+    │   └── demo_moving_average.py     # 端到端串联 signals + conv + 可视化
+    └── samples/                       # 生成的 wav（gitignore）
 ```
 
 ### 审查亮点：
 1. **纯计算与副作用严格分离**：`waveforms.py` 和 `myconv.py` 坚持纯函数设计，不弹窗、不写文件，给测试提供了极佳的确定性。
 2. **测试维度极其立体**：`test_myconv.py` 从最初的 5 组扩展到 **10 组全覆盖**，不仅有随机模糊测试，还包括单点边界、等长边界、冲激响应恒等性、极端浮点数与交换律验证。
-3. **分层清晰**：新增的滤波演示没有污染 `DSP_Tool`，而是规范地存放在 `examples/` 中。
+3. **分层清晰**：新增的滤波演示没有污染核心库 `dsp_toolbox/`，而是规范地存放在 `dsp-toolbox/examples/` 中。
 
 ---
 
@@ -90,7 +93,7 @@ $$y[n] = \frac{x[n] + x[n-1] + \dots + x[n-M+1]}{M} = \sum_{k=0}^{M-1} x[n-k] \c
 ## 四、专题三：Python 工程化与架构设计规范
 
 ### 1. 命令行解析：为什么抽离 `build_parser()`？
-在 [`make_wave.py`](file:///f:/antigravity/audio-projects/audio_base/make_wave.py) 和 [`demo_moving_average.py`](file:///f:/antigravity/audio-projects/examples/demo_moving_average.py) 中，均采用了 `build_parser()` 范式：
+在 [`make_wave.py`](../dsp-toolbox/examples/make_wave.py) 和 [`demo_moving_average.py`](../dsp-toolbox/examples/demo_moving_average.py) 中，均采用了 `build_parser()` 范式：
 
 ```python
 def build_parser():
@@ -112,11 +115,11 @@ def main(argv=None):
 3. **规避隐式类型错误**：命令行读入的参数全是字符串，显式指定 `type=int` / `type=float` 能彻底杜绝 `"44100" * 2 = "4410044100"` 的恶性拼接 Bug。
 
 ### 2. 模块导入与包封装哲学
-- **不推荐（暴露底层细节）**：`from audio_base.waveforms import sine_wave`
-- **推荐（面向包级接口）**：`from audio_base import sine_wave`
+- **不推荐（暴露底层细节）**：`from dsp_toolbox.signals import sine_wave`
+- **推荐（面向包级接口）**：`from dsp_toolbox import sine_wave`
 
 **为什么？**
-在 [`audio_base/__init__.py`](file:///f:/antigravity/audio-projects/audio_base/__init__.py) 中利用 `__all__ = ["time_axis", "sine_wave", "chirp_wave"]` 定义了公共 API。  
+在 [`dsp_toolbox/__init__.py`](../dsp-toolbox/dsp_toolbox/__init__.py) 中利用 `__all__ = ["myconv", "time_axis", "sine_wave", "chirp_wave"]` 定义了公共 API。  
 对外隐藏具体文件名，日后重构将 `waveforms.py` 拆解为多个子文件时，外部调用方的代码一行都不用修改。
 
 ### 3. `sys`、`os`、`pathlib.Path` 的分工与替代

@@ -3,18 +3,18 @@
 demo_moving_average.py —— 滑动平均滤波实战演示 (Moving Average Filter Demo)
 
 本脚本演示如何使用手写的一维离散卷积 myconv 实现滑动平均滤波（去噪）：
-1. 用 audio_base 生成 50Hz 纯净正弦波 (Clean Sine Wave)；
+1. 用 dsp_toolbox.signals 生成 50Hz 纯净正弦波 (Clean Sine Wave)；
 2. 人为叠加高斯白噪声 (Gaussian White Noise)，模拟受干扰信号；
 3. 构造长度为 M 的归一化矩形平滑核：h = [1/M, ..., 1/M] (Boxcar Kernel)；
-4. 调用 DSP_Tool.myconv(noisy, h, mode="same") 进行低通滤波；
+4. 调用 dsp_toolbox.myconv(noisy, h, mode="same") 进行低通滤波；
 5. 用 matplotlib 画出对比图。
 
 注意：为了避免不同操作系统缺少中文字体而导致图表出现方块乱码（Tofu blocks），
 图表内部（标题、坐标轴、图例）统一使用英文标注，代码注释与终端输出保留中文。
 
 用法：
-    python examples/demo_moving_average.py
-    python examples/demo_moving_average.py --window 25 --noise 0.5
+    python dsp-toolbox/examples/demo_moving_average.py
+    python dsp-toolbox/examples/demo_moving_average.py --window 25 --noise 0.5
 """
 import argparse
 import sys
@@ -23,12 +23,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 将项目根目录加入模块搜索路径，保证在任何目录下运行本脚本都能正确导入
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
-from audio_base import sine_wave, time_axis  # noqa: E402
-from DSP_Tool import myconv  # noqa: E402
+from dsp_toolbox import myconv, sine_wave, time_axis
 
 
 def build_parser():

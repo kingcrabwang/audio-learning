@@ -1,14 +1,13 @@
-# test_myconv.py
+# test_conv.py
 """
 myconv 的对照测试：以 numpy.convolve 作为标准答案。
 
-两种运行方式都可以：
-    python test_myconv.py     # 直接运行，有失败时退出码为 1
-    pytest test_myconv.py     # 交给 pytest 收集运行
+运行方式（在 dsp-toolbox/ 目录下）：
+    PYTHONPATH=. python tests/test_conv.py    # 直接运行，有失败时退出码为 1
+    pytest                                    # 需要先 pip install -e .
 
 为什么写成这个样子，见文件末尾的说明。
 """
-import os
 import sys
 
 import numpy as np
@@ -16,9 +15,8 @@ import numpy as np
 # 把本文件所在目录加入模块搜索路径。
 # 这样无论你在哪个目录下敲 python，都能找到同目录的 myconv.py。
 # （等以后习惯了包导入，这几行可以删掉，改用 from DSP_Tool.myconv import myconv）
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from myconv import (  # noqa: E402  必须在调整 sys.path 之后再导入
+from dsp_toolbox.conv import (
     conv_full_reference,
     conv_full_vectorized,
     myconv,

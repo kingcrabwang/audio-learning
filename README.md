@@ -8,7 +8,9 @@
 ```bash
 conda env create -f environment.yml     # 只有第一次需要
 conda activate audio-learning
-python DSP_Tool/test_myconv.py          # 应看到 10 个 [PASS]、退出码 0
+pip install -e "./dsp-toolbox[dev]"     # 只有第一次需要（可编辑安装子项目）
+
+cd dsp-toolbox && pytest                # 应看到 10 passed
 ```
 
 ## 这是什么
@@ -23,10 +25,10 @@ python DSP_Tool/test_myconv.py          # 应看到 10 个 [PASS]、退出码 0
 | `doc/` | 学习笔记（纯文本，边学边记） |
 
 设计上刻意把「**纯计算**」和「**读写 / 绘图**」分开：
-`waveforms.py` 只算数，不读文件、不写文件、不弹窗口 —— 所以能直接复用，
+`signals.py` 只算数，不读文件、不写文件、不弹窗口 —— 所以能直接复用，
 也才好写测试。它只依赖 numpy，不 import matplotlib 或 soundfile。
 
-想看清各目录里有什么：`ls audio_base DSP_Tool examples doc`。
+想看清有哪些子项目：`ls dsp-toolbox docs`。
 
 ## 环境准备
 
@@ -48,41 +50,41 @@ conda env export --from-history > environment.yml
 
 ## 怎么跑
 
-### 1. 跑 DSP_Tool 的对照测试
+### 1. 跑 dsp-toolbox 的对照测试
 
 ```bash
 conda activate audio-learning
-python DSP_Tool/test_myconv.py
+cd dsp-toolbox && pytest
 ```
 
-看到 10 个 `[PASS]` 且退出码为 0，就说明卷积实现是对的。
-这个脚本也能交给 pytest：`pytest DSP_Tool/test_myconv.py`。
+看到 `10 passed`（或 `PYTHONPATH=. python tests/test_conv.py` 打印 10 个 `[PASS]`）就说明卷积实现是对的。
+（不再需要任何 `sys.path` 技巧 —— `pip install -e .` 之后直接从包导入。）
 
 ### 2. 生成音频文件、观察波形
 
-脚本用的是**基于「脚本所在目录」**的路径，所以在**任何目录**下运行都行，
-**不必**先 `cd` 进 `audio_base/`：
+脚本路径基于「脚本所在目录」，所以**在任何目录**下运行都行；
+生成的 wav 统一落到 `dsp-toolbox/samples/`（该目录已被 `.gitignore` 排除）：
 
 ```bash
 conda activate audio-learning
 
-python audio_base/make_wave.py sine     # 生成 sine_1K.wav（1kHz 正弦，1 秒）
-python audio_base/make_wave.py chirp    # 生成 chirp.wav（200→2000Hz 扫频，3 秒）
+python dsp-toolbox/examples/make_wave.py sine     # 生成 samples/sine_1K.wav（1kHz 正弦，1 秒）
+python dsp-toolbox/examples/make_wave.py chirp    # 生成 samples/chirp.wav（200→2000Hz 扫频，3 秒）
 
-python audio_base/read_wave.py          # 读 chirp.wav，打印信息并画波形
+python dsp-toolbox/examples/read_wave.py          # 读 samples/chirp.wav，打印信息并画波形
 ```
 
 > `read_wave.py` 会弹出波形窗口，然后**停在那里等你关闭窗口** —— 这不是卡死。
-> 没有图形界面时，用 `MPLBACKEND=Agg python audio_base/read_wave.py` 跳过弹窗。
+> 没有图形界面时，用 `MPLBACKEND=Agg python dsp-toolbox/examples/read_wave.py` 跳过弹窗。
 
 生成的 wav **不在仓库里**（`.gitignore` 排除了 `*.wav`，因为体积大且能随时重新生成）。
 
 想改采样率、时长、频率：
 
 ```bash
-python audio_base/make_wave.py --help
-python audio_base/make_wave.py sine --freq 440 --sr 48000 --duration 2
-python audio_base/make_wave.py chirp --f0 50 --f1 5000 --out sweep.wav
+python dsp-toolbox/examples/make_wave.py --help
+python dsp-toolbox/examples/make_wave.py sine --freq 440 --sr 48000 --duration 2
+python dsp-toolbox/examples/make_wave.py chirp --f0 50 --f1 5000 --out sweep.wav
 ```
 
 ### 3. 跑滑动平均滤波综合演示
@@ -90,19 +92,19 @@ python audio_base/make_wave.py chirp --f0 50 --f1 5000 --out sweep.wav
 ```bash
 conda activate audio-learning
 
-python examples/demo_moving_average.py                # 50Hz 正弦 + 噪声，窗口 15 点
-python examples/demo_moving_average.py --window 31    # 换窗口大小
-python examples/demo_moving_average.py --no-show      # 不弹窗（没有图形界面时用）
+python dsp-toolbox/examples/demo_moving_average.py                # 50Hz 正弦 + 噪声，窗口 15 点
+python dsp-toolbox/examples/demo_moving_average.py --window 31    # 换窗口大小
+python dsp-toolbox/examples/demo_moving_average.py --no-show      # 不弹窗（没有图形界面时用）
 ```
 
 ## 手写实现说明
 
-### `audio_base/waveforms.py`
+### `dsp-toolbox/dsp_toolbox/signals.py`
 
 信号生成函数，全是**纯函数** —— 给同样的输入永远得到同样的输出：
 
 ```python
-from audio_base import sine_wave, chirp_wave
+from dsp_toolbox import sine_wave, chirp_wave
 
 x = sine_wave(freq=440, sr=48000, duration=2.0, amplitude=0.5)
 y = chirp_wave(f0=200, f1=2000, sr=44100, duration=3.0)
@@ -111,7 +113,7 @@ y = chirp_wave(f0=200, f1=2000, sr=44100, duration=3.0)
 扫频相位取 `φ(t) = 2π·(f0·t + (f1-f0)/(2T)·t²)`，
 对它求导再除以 2π，得到瞬时频率 `f0 + (f1-f0)·t/T` —— 正好从 f0 线性变到 f1。
 
-### `DSP_Tool/myconv.py`
+### `dsp-toolbox/dsp_toolbox/conv.py`
 
 `myconv(x, h, mode)` 手写一维离散卷积，**不调用** `np.convolve`
 或 `scipy.signal` 的卷积函数。
@@ -125,7 +127,7 @@ y = chirp_wave(f0=200, f1=2000, sr=44100, duration=3.0)
 | `valid` | 只保留完全重叠的部分 | \|N − M\| + 1 |
 
 ```python
-from DSP_Tool import myconv
+from dsp_toolbox import myconv
 
 myconv([1, 2, 3], [1, 2], mode="full")     # array([1., 4., 7., 6.])
 myconv([1, 2, 3], [1, 2], mode="valid")    # array([4., 7.])
@@ -187,19 +189,13 @@ git push
   写在规则后面会让这条规则**静默失效**、且不报任何错。
 - 想验证某条忽略规则到底生不生效：`git check-ignore -v <文件路径>`。
 
-## 参考
-
-（边学边记，方便以后回来接着看）
-
-- 教材 / 课程：
-- 主要查的文档：
-
 ## 待改进
 
 - [ ] `full` 卷积仍是 O(N·M)。抽头很长时可以改用 FFT
       （卷积定理：时域卷积 = 频域相乘，复杂度降到 O(L log L)）；
       代价是结果不再逐位相同，只能保证到约 1e-12 的相对误差
-- [ ] 把测试挪到 `tests/` 目录，并给 `audio_base` 也补上 pytest 测试
+- [x] 把测试挪到 `tests/` 目录（已随 monorepo 重构完成）
+- [ ] 给 `signals.py` 补上 pytest 测试
 - [ ] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
 
 ## 许可证
