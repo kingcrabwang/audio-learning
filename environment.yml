@@ -23,6 +23,8 @@ dependencies:
   - python=3.10
   # 数组运算，同时充当卷积的对照基准
   - numpy
+    # 求根（tf2zpk）与频响（freqz），用于零极点分析
+  - scipy
   # 画波形图
   - matplotlib
   # 读写 wav 文件
