@@ -34,32 +34,20 @@ def _is_1d(seq):
 
 
 def _validate_1d(x, h):
-    """校验 x 和 h 都是非空一维数值序列"""
-    if not _is_1d(x):
-        raise ValueError(
-            f"输入序列 x 必须是非空一维数值序列，当前 dtype={np.asarray(x).dtype}, "
-            f"shape={np.asarray(x).shape}"
-        )
-        # 安全获取诊断信息：x 可能完全无法转数组（如 object()），
-        # 直接 np.asarray(x) 会抛新异常，掩盖原始错误。
-        try:
-            arr = np.asarray(x)
-            detail = f"dtype={arr.dtype}, shape={arr.shape}"
-        except Exception:
-            detail = f"type={type(x).__name__}"
-        raise ValueError(f"输入序列 x 必须是非空一维数值序列，当前 {detail}")
-    if not _is_1d(h):
-        raise ValueError(
-            f"卷积核 h 必须是非空一维数值序列，当前 dtype={np.asarray(h).dtype}, "
-            f"shape={np.asarray(h).shape}"
-        )
-        try:
-            arr = np.asarray(h)
-            detail = f"dtype={arr.dtype}, shape={arr.shape}"
-        except Exception:
-            detail = f"type={type(h).__name__}"
-        raise ValueError(f"卷积核 h 必须是非空一维数值序列，当前 {detail}")
+    """校验 x 和 h 都是非空一维实数序列。"""
+    for name, value in (("x", x), ("h", h)):
+        if _is_1d(value):
+            continue
 
+        try:
+            arr = np.asarray(value)
+            detail = f"dtype={arr.dtype}, shape={arr.shape}"
+        except Exception:
+            detail = f"type={type(value).__name__}"
+
+        raise ValueError(
+            f"{name} 必须是非空一维实数序列，当前 {detail}"
+        )
 
 def conv_full_vectorized(x, h):
     """

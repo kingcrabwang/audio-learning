@@ -19,10 +19,11 @@ cd dsp-toolbox && pytest                # 应看到 10 passed
 
 | 目录 | 内容 |
 |---|---|
-| `audio_base/` | 音频基础：生成正弦 / 扫频信号、读写 wav、画波形 |
-| `DSP_Tool/` | 手写的 DSP 工具集：目前有一维卷积 |
-| `examples/` | 综合演示：正弦 + 噪声 → 滑动平均滤波 → 画原始/滤波对比图 |
-| `doc/` | 学习笔记（纯文本，边学边记） |
+| `dsp-toolbox/dsp_toolbox/ ` | 算法实现 |
+| `dsp-toolbox/tests/ ` |  自动化测试 |
+| `dsp-toolbox/examples/` | 演示脚本 |
+| `dsp-toolbox/docs/` | 算法说明与性能记录 |
+| `docs/` | 学习笔记（纯文本，边学边记） |
 
 设计上刻意把「**纯计算**」和「**读写 / 绘图**」分开：
 `signals.py` 只算数，不读文件、不写文件、不弹窗口 —— 所以能直接复用，

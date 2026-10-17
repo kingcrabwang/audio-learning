@@ -50,6 +50,8 @@ def moving_average_filter(x, window_size):
     """
     if window_size < 1:
         raise ValueError("window_size 必须大于等于 1")
+    if window_size > len(x):
+        raise ValueError("window_size 不能大于输入信号长度")
     # 构造归一化的矩形窗滤波核 (Boxcar kernel)
     h = np.ones(window_size, dtype=np.float64) / float(window_size)
     return myconv(x, h, mode="same")

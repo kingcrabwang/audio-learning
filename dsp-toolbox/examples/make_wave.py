@@ -20,10 +20,7 @@ from pathlib import Path
 
 import soundfile as sf
 
-try:  # 被别处以模块方式导入时（本脚本在 examples/ 下，不属于 dsp_toolbox 包）
-    from .waveforms import chirp_wave, sine_wave
-except ImportError:  # 直接运行本文件时：python make_wave.py chirp
-    from waveforms import chirp_wave, sine_wave
+from dsp_toolbox import chirp_wave, sine_wave
 
 SAMPLES = Path(__file__).resolve().parent.parent / "samples"
 SAMPLES.mkdir(exist_ok=True)

@@ -18,23 +18,18 @@ __all__ = ["time_axis", "sine_wave", "chirp_wave"]
 
 
 def time_axis(duration, sr):
-    """生成时间轴，单位秒。
+    """按指定采样率生成时间轴，样本数四舍五入取整。"""
+    if not np.isfinite(sr) or sr <= 0 or int(sr) != sr:
+        raise ValueError("sr 必须是正整数")
 
-    Parameters
-    ----------
-    duration : float
-        时长，秒。
-    sr : int
-        采样率，Hz。
+    if not np.isfinite(duration) or duration <= 0:
+        raise ValueError("duration 必须是正有限数")
 
-    Returns
-    -------
-    np.ndarray
-        长度为 int(round(sr * duration))，从 0 开始、不含终点。
-    """
     n = int(round(sr * duration))
-    return np.linspace(0.0, duration, n, endpoint=False)
+    if n < 1:
+        raise ValueError("时长过短，生成的样本数不足 1")
 
+    return np.arange(n, dtype=np.float64) / sr
 
 def sine_wave(freq, sr, duration, amplitude=0.5):
     """生成单频正弦波：amplitude * sin(2πft)。
