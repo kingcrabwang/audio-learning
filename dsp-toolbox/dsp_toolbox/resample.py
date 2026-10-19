@@ -42,8 +42,10 @@ def hamming_window(numtaps):
 
 def filtered_sample(x,h,up,q):
     total=0.0
+    k_min = max(0, math.ceil((q - (len(h) - 1)) / up))
+    k_max = min(len(x) - 1, q // up)
 
-    for k in range(len(x)):
+    for k in range(k_min, k_max + 1):
         tap_index=q-k*up
 
         if 0<=tap_index<len(h):
