@@ -1,6 +1,25 @@
 import numpy as np
 import math
 
+def validate_signal(x):
+    arr = np.asarray(x)
+
+    if arr.ndim != 1:
+        raise ValueError("x 必须是一维序列")
+
+    if arr.size == 0:
+        raise ValueError("x 不能为空")
+
+    if arr.dtype.kind not in "biuf":
+        raise ValueError("x 必须由实数构成")
+
+    arr = arr.astype(np.float64)
+
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("x 不能包含 NaN 或无穷大")
+
+    return arr
+
 def ideal_lowpass(cutoff,numtaps):
     center=(numtaps-1)//2
     h=np.zeros(numtaps)
@@ -56,6 +75,7 @@ def design_resample_filter(up,down,numtaps):
     return h_base * up
 
 def decimate(x, M):
+    x = validate_signal(x)
     M = validate_factor(M, "M")
     up = 1
     down = M
@@ -66,6 +86,7 @@ def decimate(x, M):
 
 
 def interpolate(x, L):
+    x = validate_signal(x)
     L = validate_factor(L, "L")
     up = L
     down = 1
