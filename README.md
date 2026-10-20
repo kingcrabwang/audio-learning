@@ -10,7 +10,7 @@ conda env create -f environment.yml     # 只有第一次需要
 conda activate audio-learning
 pip install -e "./dsp-toolbox[dev]"     # 只有第一次需要（可编辑安装子项目）
 
-cd dsp-toolbox && pytest                # 应看到 10 passed
+cd dsp-toolbox && python -m pytest -q    # 运行整个子项目的测试
 ```
 
 ## 这是什么
@@ -30,6 +30,19 @@ cd dsp-toolbox && pytest                # 应看到 10 passed
 也才好写测试。它只依赖 numpy，不 import matplotlib 或 soundfile。
 
 想看清有哪些子项目：`ls dsp-toolbox docs`。
+
+## 学习笔记
+
+建议按学习内容阅读：
+
+1. [边界测试、平滑滤波与工程规范](docs/学习笔记%2001：边界测试、DSP%20平滑滤波与%20Python%20工程规范.md)
+2. [二阶谐振器与零极点](docs/学习笔记%2002：二阶谐振器与零极点分析.md)
+3. [重采样与混叠](docs/学习笔记%2004（回顾）：重采样与混叠.md)
+4. [从蝶形图到手写 FFT](docs/学习笔记%2005（回顾）：从蝶形图到手写%20FFT.md)
+5. [频谱泄漏与窗函数](docs/学习笔记%2006（回顾）：频谱泄漏与窗函数.md)
+6. [DTMF 与 Goertzel 检测](docs/学习笔记%2003：DTMF%20与%20Goertzel%20检测.md)
+
+04～06 是后来补写的回顾，因此编号与实际学习顺序不同。
 
 ## 环境准备
 
@@ -58,7 +71,7 @@ conda activate audio-learning
 cd dsp-toolbox && pytest
 ```
 
-看到 `10 passed`（或 `PYTHONPATH=. python tests/test_conv.py` 打印 10 个 `[PASS]`）就说明卷积实现是对的。
+看到测试全部通过，说明当前已有模块通过了仓库里的自动检查。若只想检查卷积，可运行 `python -m pytest tests/test_conv.py -q`。
 （不再需要任何 `sys.path` 技巧 —— `pip install -e .` 之后直接从包导入。）
 
 ### 2. 生成音频文件、观察波形
@@ -99,6 +112,18 @@ python dsp-toolbox/examples/demo_moving_average.py --no-show      # 不弹窗（
 ```
 
 ## 手写实现说明
+
+目前已有卷积、信号生成、FFT/IFFT、整数倍重采样和 DTMF 检测。各模块进度、运行方法与限制见 [dsp-toolbox/README.md](dsp-toolbox/README.md)。
+
+想直接体验 DTMF 按键识别：
+
+```bash
+cd dsp-toolbox
+python examples/demo_dtmf.py
+python -m dsp_toolbox.dtmf samples/dtmf_demo.wav
+```
+
+演示会生成 `samples/dtmf_demo.wav`；该文件被 Git 忽略，不需要提交。
 
 ### `dsp-toolbox/dsp_toolbox/signals.py`
 
@@ -196,8 +221,8 @@ git push
       （卷积定理：时域卷积 = 频域相乘，复杂度降到 O(L log L)）；
       代价是结果不再逐位相同，只能保证到约 1e-12 的相对误差
 - [x] 把测试挪到 `tests/` 目录（已随 monorepo 重构完成）
-- [ ] 给 `signals.py` 补上 pytest 测试
-- [ ] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
+- [x] 给 `signals.py` 补上 pytest 测试
+- [x] 加 `pyproject.toml`，让这个工具集能 `pip install -e .`
 
 ## 许可证
 
