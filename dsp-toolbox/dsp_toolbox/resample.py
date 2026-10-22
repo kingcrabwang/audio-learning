@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from .filters import hamming_window, ideal_lowpass
 
 def validate_signal(x):
     arr = np.asarray(x)
@@ -20,25 +21,6 @@ def validate_signal(x):
 
     return arr
 
-def ideal_lowpass(cutoff,numtaps):
-    center=(numtaps-1)//2
-    h=np.zeros(numtaps)
-
-    for n in range(numtaps):
-        d=n-center
-
-        if d==0:
-            h[n]=cutoff
-        else:
-            h[n]=math.sin(math.pi*cutoff*d)/(math.pi*d)
-    return h
-
-def hamming_window(numtaps):
-    window=np.zeros(numtaps)
-
-    for n in range(numtaps):
-        window[n]=0.54-0.46*math.cos(2*math.pi*n/(numtaps-1))
-    return window
 
 def filtered_sample(x,h,up,q):
     total=0.0
@@ -75,6 +57,7 @@ def design_resample_filter(up,down,numtaps):
     h_base = h_windowed / np.sum(h_windowed)
 
     return h_base * up
+
 
 def decimate(x, M):
     x = validate_signal(x)
