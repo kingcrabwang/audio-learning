@@ -69,18 +69,20 @@ def hann_window(numtaps):
     
 def design_fir_lowpass(fc, fs, numtaps, window="hamming"):
     """使用对称窗设计奇数长度的 FIR 低通滤波器。"""
+    #1、检验参数是否合法
     _validate_fir_lowpass_params(fc, fs, numtaps, window)
-
+    #2、生成理想低通
     cutoff = 2 * fc / fs
     h_ideal = ideal_lowpass(cutoff, numtaps)
-
+    #3、选窗
     if window == "hamming":
         window_value = hamming_window(numtaps)
     else:
         # 检查已经通过，所以另一种合法选择就是 Hann。
         window_value = hann_window(numtaps)
-
+    #4、加窗
     h_windowed = h_ideal * window_value
+    #5、归一化处理
     h_base = h_windowed / np.sum(h_windowed)
 
     return h_base
