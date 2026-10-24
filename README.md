@@ -37,10 +37,13 @@ cd dsp-toolbox && python -m pytest -q    # 运行整个子项目的测试
 
 1. [边界测试、平滑滤波与工程规范](docs/学习笔记%2001：边界测试、DSP%20平滑滤波与%20Python%20工程规范.md)
 2. [二阶谐振器与零极点](docs/学习笔记%2002：二阶谐振器与零极点分析.md)
-3. [重采样与混叠](docs/学习笔记%2004（回顾）：重采样与混叠.md)
-4. [从蝶形图到手写 FFT](docs/学习笔记%2005（回顾）：从蝶形图到手写%20FFT.md)
-5. [频谱泄漏与窗函数](docs/学习笔记%2006（回顾）：频谱泄漏与窗函数.md)
+3. [重采样与混叠](docs/学习笔记%2004：重采样与混叠.md)
+4. [从蝶形图到手写 FFT](docs/学习笔记%2005：从蝶形图到手写%20FFT.md)
+5. [频谱泄漏与窗函数](docs/学习笔记%2006：频谱泄漏与窗函数.md)
 6. [DTMF 与 Goertzel 检测](docs/学习笔记%2003：DTMF%20与%20Goertzel%20检测.md)
+7. [C 语言起步与双指针](docs/学习笔记%2007：C%20语言起步与双指针.md)
+8. [FIR 与 IIR 滤波器设计](docs/学习笔记%2008：FIR%20与%20IIR%20滤波器设计.md)
+9. [流式滤波与 C 环形缓冲](docs/学习笔记%2009：流式滤波与%20C%20环形缓冲.md)
 
 04～06 是后来补写的回顾，因此编号与实际学习顺序不同。
 
@@ -113,7 +116,9 @@ python dsp-toolbox/examples/demo_moving_average.py --no-show      # 不弹窗（
 
 ## 手写实现说明
 
-目前已有卷积、信号生成、FFT/IFFT、整数倍重采样和 DTMF 检测。各模块进度、运行方法与限制见 [dsp-toolbox/README.md](dsp-toolbox/README.md)。
+目前已有卷积、信号生成、FFT/IFFT、整数倍重采样、DTMF 检测、窗函数 FIR 设计、Butterworth IIR 低通，以及 Python 流式 FIR/IIR。C 浮点 FIR 已在 Ubuntu 完成对拍。各模块进度、运行方法与限制见 [dsp-toolbox/README.md](dsp-toolbox/README.md)。
+
+滤波器实验结论和选型表见 [滤波器报告](dsp-toolbox/docs/filter_design_report.md)。当前验证包含合成信号实验，真实音频实验、等波纹设计等后续项目仍需验收。
 
 想直接体验 DTMF 按键识别：
 
