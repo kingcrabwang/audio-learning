@@ -32,11 +32,55 @@ print(myconv([1, 2, 3], [1, 2], mode="full"))  # [1. 4. 7. 6.]
 | `fft.py` | radix-2 迭代 FFT / IFFT | 与 `np.fft.fft` / `ifft` 对拍 | 已实现 |
 | `resample.py` | 抗混叠抽取、插零内插 | 与 `scipy.signal.resample_poly` 对拍，误差 < `1e-10` | 已实现 |
 | `dtmf.py` | Goertzel 双音检测、连续按键识别 | 合成 16 键 × 3 档信噪比测试及命令行测试 | 已实现 |
-| `filters.py` | FIR / IIR 设计与流式实现 | 见 SPEC | 待实现 |
+| `filters.py` | 窗函数 FIR 低通/带通/陷波；Butterworth IIR 低通；实数流式 FIR/IIR | 系数与 `firwin` / `butter` 误差 < `1e-12`；输出与 `lfilter` 误差 < `1e-10`；不同分块完全一致 | 当前上述功能已实现，等波纹等后续项待补 |
 | `spectrum.py` | 周期图、Welch 等谱估计 | 见 SPEC | 待实现 |
 | `adaptive.py` | LMS / NLMS / RLS | 见 SPEC | 待实现 |
 
 “已实现”只表示仓库已有实现与相应测试；详细验收仍以 [SPEC.md](SPEC.md) 为准。
+
+## 滤波器演示与流式处理
+
+在 `dsp-toolbox/` 目录下运行：
+
+```bash
+MPLBACKEND=Agg python examples/demo_fir_lowpass.py
+MPLBACKEND=Agg python examples/demo_filter_denoise.py
+MPLBACKEND=Agg python examples/demo_fir_iir_comparison.py
+```
+
+三段演示分别比较 FIR 长度、三种 FIR 对合成干扰的作用，以及 FIR/IIR 的幅频、相位和群延迟。合成数据中的 200 Hz 是目标，50 Hz 和 350 Hz 是干扰。选型表、参数、图片与结论见[滤波器报告](docs/filter_design_report.md)。
+
+流式 FIR 示例：
+
+```python
+from dsp_toolbox.filters import FirFilter, design_fir_lowpass
+
+h = design_fir_lowpass(fc=200, fs=1000, numtaps=101)
+fir = FirFilter(h)
+first = fir.process([1.0, 0.0, 0.0])
+second = fir.process([0.0, 0.0])  # 同一个对象继续使用历史
+```
+
+`IirFilter(b, a)` 使用相同的 `process(block)` 方式，并保存输入和输出历史。流式结果是因果输出，保留滤波器延迟；不能直接与居中截取的 `myconv(..., mode="same")` 结果比较。
+
+## C 浮点 FIR 对拍
+
+需要 C 编译器、CMake，以及已经安装开发依赖的 Python。实现位于 `csrc/include/dsp/fir.h`、`csrc/src/fir.c`。
+
+在已激活 `audio-learning` 的 Ubuntu 终端、`dsp-toolbox/` 目录下执行：
+
+```bash
+python tests/make_fir_golden.py
+cmake -S csrc -B /tmp/dsp-toolbox-build -DPython3_EXECUTABLE="$(command -v python)"
+cmake --build /tmp/dsp-toolbox-build
+ctest --test-dir /tmp/dsp-toolbox-build --output-on-failure
+```
+
+生成器把固定的系数和输入存为 `golden/fir/*.npy`。测试读取这些文件，通过 ctypes 把相同数据传给 C 共享库。参考输出由相同 float32 数据转换为双精度后交给 `lfilter` 计算。
+
+验收要求：C 浮点输出与参考逐点误差 < `1e-6`；按 1/7/64/512 点分块时，与 C 整段处理输出完全相同。`fir_create` 分配并初始化，`fir_process` 使用已有内存，`fir_destroy` 释放。
+
+CTest 注册一个 `fir_golden`，内部运行 21 个 pytest 用例。修改 `CMakeLists.txt` 后要保存并重新配置，可用 `ctest --test-dir /tmp/dsp-toolbox-build -N` 检查注册结果。Ubuntu CTest 已由用户确认通过；尚未测量 C 性能或进行内存泄漏检测。
 
 ## 运行 DTMF 演示
 
@@ -66,7 +110,9 @@ key = detect_key(samples, sr=8000)  # 证据不足时返回 None
 python -m pytest -q
 ```
 
-目前测试覆盖卷积、信号生成、FFT/IFFT、整数倍抽取与内插，以及 DTMF 的 16 个键、合成噪声、重复按键和 WAV 命令行调用。DTMF 的“16 键 × 3 档信噪比”是**合成测试集**的结果，尚不能当作真实录音中的识别率。
+目前测试覆盖卷积、信号生成、FFT/IFFT、整数倍抽取与内插、DTMF，以及 FIR/IIR 系数、逐样本输出和分块一致性。C FIR 单独通过 CTest 验收；普通 `python -m pytest -q` 未提供 C 库路径时，会跳过 C 的 21 个用例，跳过不代表 C 已通过。
+
+DTMF 的“16 键 × 3 档信噪比”与当前滤波器去噪演示都使用合成数据，尚不能当作真实录音中的性能结论。最新回归环境与结果记录在[滤波器报告](docs/filter_design_report.md)。
 
 ## 已知限制
 
@@ -74,6 +120,14 @@ python -m pytest -q
 - 重采样目前只提供整数倍 `decimate(x, M)` 与 `interpolate(x, L)`；尚未提供通用的任意 `up/down` 公共接口。
 - DTMF 文件读取只支持未压缩的 **16-bit PCM WAV**。立体声会先取两声道平均；两声道相位相反时可能互相抵消。
 - 连续按键检测按约 40 ms 窗、10 ms 步长处理，重复同一按键需要有可识别的间隔；阈值针对演示与合成测试，尚未用真实电话录音校准。
+- FIR 设计目前限定奇数长度；低通支持 Hamming/Hann，带通和陷波使用 Hamming。等波纹设计尚未实现。
+- `design_iir` 当前只支持 `btype="low"`、`ftype="butter"`，不提供高通、带通或其他 IIR 类型。
+- FIR 陷波的 `q` 定义名义宽度 `f0/q`，不保证实际 −3 dB 带宽；自动长度取约 `4*fs/带宽` 并调整成奇数，窄带低频时可能很长。
+- 流式滤波接口只接受有限实数序列。当前 IIR 采用直接型递推；高阶或极端截止频率需另行验证数值表现，未实现二阶节结构。
 - 尚未做实时性优化；性能数据仍待补充到 `docs/bench.md`。
 
+公式与边界说明见[公式速查](docs/formulas.md)、[限制与易错点](docs/failure_modes.md)。
+
 DTMF 的推导和本项目代码路径见 [学习笔记 03：DTMF 与 Goertzel 检测](../docs/学习笔记%2003：DTMF%20与%20Goertzel%20检测.md)。
+
+本轮学习笔记：[C 语言起步与双指针](../docs/学习笔记%2007：C%20语言起步与双指针.md)、[FIR 与 IIR 设计](../docs/学习笔记%2008：FIR%20与%20IIR%20滤波器设计.md)、[流式滤波与 C 环形缓冲](../docs/学习笔记%2009：流式滤波与%20C%20环形缓冲.md)。
