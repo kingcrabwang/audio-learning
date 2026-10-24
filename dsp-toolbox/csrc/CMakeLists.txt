@@ -14,3 +14,18 @@ add_executable(demo_reverse_string
     src/demo_reverse_string.c)
 add_executable(demo_sorted_squares 
     src/demo_sorted_squares.c)
+
+add_library(dsp_fir SHARED src/fir.c)
+target_include_directories(dsp_fir PUBLIC include)
+set_target_properties(dsp_fir PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+enable_testing()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+add_test(
+    NAME fir_golden
+    COMMAND "${CMAKE_COMMAND}" -E env
+        "DSP_FIR_LIB=$<TARGET_FILE:dsp_fir>"
+        "${Python3_EXECUTABLE}" -m pytest
+        "${CMAKE_CURRENT_SOURCE_DIR}/../tests/test_c_fir.py" -q
+)
