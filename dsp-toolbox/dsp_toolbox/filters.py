@@ -76,6 +76,20 @@ def _validate_fir_notch_params(f0, fs, q):
     if not 0 < f1 < f2 < fs / 2:
         raise ValueError("陷波频段必须满足 0 < f1 < f2 < fs / 2")
 
+def _filter_real_vector(values, name, allow_empty=False):
+    """Validate first, so a rejected block cannot partly change filter state."""
+    arr = np.asarray(values)
+    if arr.ndim != 1:
+        raise ValueError(f"{name} 必须是一维实数序列")
+    if not allow_empty and arr.size == 0:
+        raise ValueError(f"{name} 不能为空")
+    if arr.dtype.kind not in "iuf":
+        raise ValueError(f"{name} 必须是实数序列，不能包含布尔值或复数")
+    result = np.array(arr, dtype=np.float64, copy=True)
+    if not np.all(np.isfinite(result)):
+        raise ValueError(f"{name} 不能包含 NaN 或无穷大")
+    return result
+
 
 def ideal_lowpass(cutoff,numtaps):
     center=(numtaps-1)//2
@@ -251,3 +265,71 @@ def design_fir_notch(f0, fs, q):
     # 把直流增益调整为 1。
     return h_notch / np.sum(h_notch)
 
+class FirFilter:
+    """Causal real FIR with a persistent circular input buffer."""
+
+    def __init__(self, h):
+        self.h = _filter_real_vector(h, "h")
+        self.buffer = np.zeros(len(self.h), dtype=np.float64)
+        self.write_index = 0
+
+    def process(self, block):
+        samples = _filter_real_vector(block, "block", allow_empty=True)
+        outputs = []
+        for sample in samples:
+            self.buffer[self.write_index] = sample
+            total = 0.0
+            for k in range(len(self.h)):
+                index = (self.write_index - k) % len(self.buffer)
+                total += self.h[k] * self.buffer[index]
+            outputs.append(total)
+            self.write_index = (self.write_index + 1) % len(self.buffer)
+        return np.asarray(outputs, dtype=np.float64)
+
+
+class IirFilter:
+    """Causal real IIR using separate input and output circular buffers."""
+
+    def __init__(self, b, a):
+        b = _filter_real_vector(b, "b")
+        a = _filter_real_vector(a, "a")
+        if a[0] == 0:
+            raise ValueError("a[0] 不能为零")
+
+        # Scale both arrays by the ORIGINAL a[0], then a[0] becomes 1.
+        scale = a[0]
+        with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+            self.b = b / scale
+            self.a = a / scale
+        if not (
+            np.all(np.isfinite(self.b))
+            and np.all(np.isfinite(self.a))
+        ):
+            raise ValueError("系数归一化后必须为有限实数")
+
+        self.input_buffer = np.zeros(len(self.b), dtype=np.float64)
+        self.output_buffer = np.zeros(len(self.a), dtype=np.float64)
+        self.input_index = 0
+        self.output_index = 0
+
+    def process(self, block):
+        samples = _filter_real_vector(block, "block", allow_empty=True)
+        outputs = []
+        for sample in samples:
+            self.input_buffer[self.input_index] = sample
+            total = 0.0
+
+            for k in range(len(self.b)):
+                index = (self.input_index - k) % len(self.input_buffer)
+                total += self.b[k] * self.input_buffer[index]
+
+            for k in range(1, len(self.a)):
+                index = (self.output_index - k) % len(self.output_buffer)
+                total -= self.a[k] * self.output_buffer[index]
+
+            self.output_buffer[self.output_index] = total
+            outputs.append(total)
+            self.input_index = (self.input_index + 1) % len(self.input_buffer)
+            self.output_index = (self.output_index + 1) % len(self.output_buffer)
+
+        return np.asarray(outputs, dtype=np.float64)
