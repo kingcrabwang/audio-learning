@@ -34,7 +34,7 @@
 MPLBACKEND=Agg python examples/demo_filter_denoise.py
 ```
 
-原演示将图保存到当前工作目录；本报告中的图片是该结果的文档副本。
+演示默认把图保存到 `outputs/`。本报告展示的图片可用 `--output docs/images/filter_denoise_comparison.png` 重新生成。
 
 ## FIR 与 IIR 的幅频和群延迟
 
@@ -56,6 +56,8 @@ MPLBACKEND=Agg python examples/demo_filter_denoise.py
 ```bash
 MPLBACKEND=Agg python examples/demo_fir_iir_comparison.py
 ```
+
+要更新报告图片，运行 `MPLBACKEND=Agg python examples/demo_fir_iir_comparison.py --output docs/images/fir_iir_comparison.png`。
 
 ## 选型决策表
 

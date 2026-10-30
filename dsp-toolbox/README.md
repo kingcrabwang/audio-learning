@@ -50,6 +50,24 @@ MPLBACKEND=Agg python examples/demo_fir_iir_comparison.py
 
 三段演示分别比较 FIR 长度、三种 FIR 对合成干扰的作用，以及 FIR/IIR 的幅频、相位和群延迟。合成数据中的 200 Hz 是目标，50 Hz 和 350 Hz 是干扰。选型表、参数、图片与结论见[滤波器报告](docs/filter_design_report.md)。
 
+这些绘图演示默认把图片放到 `outputs/`，与运行命令时所在的目录无关；该目录由脚本自动创建，且不提交到 Git。窗函数和重采样演示也遵循同一规则：
+
+```bash
+MPLBACKEND=Agg python examples/demo_window_leakage.py
+MPLBACKEND=Agg python examples/demo_resample_aliasing.py
+```
+
+重采样的参考图保存在[文档图片](docs/images/resample_aliasing.png)。
+
+要更新报告中跟随代码提交的图片，可显式指定 `--output`：
+
+```bash
+MPLBACKEND=Agg python examples/demo_filter_denoise.py --output docs/images/filter_denoise_comparison.png
+MPLBACKEND=Agg python examples/demo_fir_iir_comparison.py --output docs/images/fir_iir_comparison.png
+```
+
+在命令行中写的相对 `--output` 路径以当前工作目录为起点；上面两条命令请在 `dsp-toolbox/` 目录执行。
+
 流式 FIR 示例：
 
 ```python
@@ -63,7 +81,9 @@ second = fir.process([0.0, 0.0])  # 同一个对象继续使用历史
 
 `IirFilter(b, a)` 使用相同的 `process(block)` 方式，并保存输入和输出历史。流式结果是因果输出，保留滤波器延迟；不能直接与居中截取的 `myconv(..., mode="same")` 结果比较。
 
-## C 浮点 FIR 对拍
+## C 代码位置与浮点 FIR 对拍
+
+`csrc/src/` 放可复用的 C 实现，`csrc/include/` 放对应头文件，`csrc/examples/` 放演示程序。独立的双指针练习放在仓库根目录 `exercises/c/`，不参与 DSP 库构建。后续计划中的 C 卷积、FFT、LMS 可依次在 `csrc/src/` 和 `csrc/include/dsp/` 增加对应文件；Python 的谱估计、自适应滤波分别在 `dsp_toolbox/spectrum.py`、`dsp_toolbox/adaptive.py` 实现，并在 `tests/` 中添加对应测试。尚未实现的模块不创建空函数。
 
 需要 C 编译器、CMake，以及已经安装开发依赖的 Python。实现位于 `csrc/include/dsp/fir.h`、`csrc/src/fir.c`。
 
@@ -126,8 +146,4 @@ DTMF 的“16 键 × 3 档信噪比”与当前滤波器去噪演示都使用合
 - 流式滤波接口只接受有限实数序列。当前 IIR 采用直接型递推；高阶或极端截止频率需另行验证数值表现，未实现二阶节结构。
 - 尚未做实时性优化；性能数据仍待补充到 `docs/bench.md`。
 
-公式与边界说明见[公式速查](docs/formulas.md)、[限制与易错点](docs/failure_modes.md)。
-
-DTMF 的推导和本项目代码路径见 [学习笔记 03：DTMF 与 Goertzel 检测](../docs/学习笔记%2003：DTMF%20与%20Goertzel%20检测.md)。
-
-本轮学习笔记：[C 语言起步与双指针](../docs/学习笔记%2007：C%20语言起步与双指针.md)、[FIR 与 IIR 设计](../docs/学习笔记%2008：FIR%20与%20IIR%20滤波器设计.md)、[流式滤波与 C 环形缓冲](../docs/学习笔记%2009：流式滤波与%20C%20环形缓冲.md)。
+公式与边界说明见[公式速查](docs/formulas.md)、[限制与易错点](docs/failure_modes.md)。个人学习笔记保留在本机 `../docs/`，不进入公开仓库。

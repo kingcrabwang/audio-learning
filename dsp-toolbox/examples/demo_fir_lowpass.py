@@ -1,5 +1,8 @@
 """比较不同长度的 Hamming 窗 FIR 低通滤波器幅频响应。"""
 
+import argparse
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -7,7 +10,14 @@ from dsp_toolbox.filters import design_fir_lowpass
 from dsp_toolbox.fft import myfft
 
 
-def main():
+def main(argv=None):
+    default_output = (
+        Path(__file__).resolve().parents[1] / "outputs" / "fir_lowpass_response.png"
+    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=default_output)
+    args = parser.parse_args(argv)
+
     fs = 16000
     fc = 2000
     n_fft = 1024
@@ -106,11 +116,10 @@ def main():
     ax_delay.legend()
     fig.tight_layout()
 
-    # 保存到运行程序时的当前工作目录。
-    output_path = "fir_lowpass_response.png"
-    fig.savefig(output_path, dpi=150)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.output, dpi=150)
     plt.close(fig)
-    print(f"图片已保存：{output_path}")
+    print(f"图片已保存：{args.output.resolve()}")
 
 
 # 直接运行本文件时执行；被其他文件导入时不自动画图。

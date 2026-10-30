@@ -1,5 +1,6 @@
 """比较 FIR 与 Butterworth IIR 低通的幅频、相位和群延迟。"""
 
+import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -9,7 +10,14 @@ from dsp_toolbox.fft import myfft
 from dsp_toolbox.filters import design_fir_lowpass, design_iir
 
 
-def main():
+def main(argv=None):
+    default_output = (
+        Path(__file__).resolve().parents[1] / "outputs" / "fir_iir_comparison.png"
+    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=default_output)
+    args = parser.parse_args(argv)
+
     fs = 1000
     fc = 200
     numtaps = 101
@@ -139,16 +147,13 @@ def main():
 
     fig.tight_layout()
 
-    # 图片保存在本脚本所在的文件夹。
-    output_path = Path(__file__).resolve().with_name(
-        "fir_iir_comparison.png"
-    )
-    fig.savefig(output_path, dpi=150)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.output, dpi=150)
     plt.close(fig)
 
     expected_delay_ms = (numtaps - 1) / (2 * fs) * 1000
     print(f"FIR 理论群延迟：{expected_delay_ms:.4f} ms")
-    print(f"图片已保存：{output_path}")
+    print(f"图片已保存：{args.output.resolve()}")
 
 
 if __name__ == "__main__":

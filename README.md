@@ -19,33 +19,24 @@ cd dsp-toolbox && python -m pytest -q    # 运行整个子项目的测试
 
 | 目录 | 内容 |
 |---|---|
-| `dsp-toolbox/dsp_toolbox/ ` | 算法实现 |
-| `dsp-toolbox/tests/ ` |  自动化测试 |
+| `dsp-toolbox/dsp_toolbox/` | 算法实现 |
+| `dsp-toolbox/tests/` | 自动化测试 |
 | `dsp-toolbox/examples/` | 演示脚本 |
-| `dsp-toolbox/docs/` | 算法说明与性能记录 |
-| `docs/` | 学习笔记（纯文本，边学边记） |
+| `dsp-toolbox/csrc/` | 可复用的 C 算法与 C 演示 |
+| `dsp-toolbox/docs/` | 算法说明与报告图片 |
+| `dsp-toolbox/outputs/` | 演示生成的图片（Git 忽略） |
+| `exercises/c/` | 独立的 C 语法与算法练习 |
+| `docs/` | 本地学习笔记与可共享的命令速查卡 |
 
 设计上刻意把「**纯计算**」和「**读写 / 绘图**」分开：
 `signals.py` 只算数，不读文件、不写文件、不弹窗口 —— 所以能直接复用，
 也才好写测试。它只依赖 numpy，不 import matplotlib 或 soundfile。
 
-想看清有哪些子项目：`ls dsp-toolbox docs`。
+想看清有哪些内容：`ls dsp-toolbox exercises docs`。
 
-## 学习笔记
+## 本地学习笔记
 
-建议按学习内容阅读：
-
-1. [边界测试、平滑滤波与工程规范](docs/学习笔记%2001：边界测试、DSP%20平滑滤波与%20Python%20工程规范.md)
-2. [二阶谐振器与零极点](docs/学习笔记%2002：二阶谐振器与零极点分析.md)
-3. [重采样与混叠](docs/学习笔记%2004：重采样与混叠.md)
-4. [从蝶形图到手写 FFT](docs/学习笔记%2005：从蝶形图到手写%20FFT.md)
-5. [频谱泄漏与窗函数](docs/学习笔记%2006：频谱泄漏与窗函数.md)
-6. [DTMF 与 Goertzel 检测](docs/学习笔记%2003：DTMF%20与%20Goertzel%20检测.md)
-7. [C 语言起步与双指针](docs/学习笔记%2007：C%20语言起步与双指针.md)
-8. [FIR 与 IIR 滤波器设计](docs/学习笔记%2008：FIR%20与%20IIR%20滤波器设计.md)
-9. [流式滤波与 C 环形缓冲](docs/学习笔记%2009：流式滤波与%20C%20环形缓冲.md)
-
-04～06 是后来补写的回顾，因此编号与实际学习顺序不同。
+`docs/学习笔记*.md` 保留在本机，Git 不再跟踪它们；公开仓库中的算法说明、规格和实验报告仍在 `dsp-toolbox/docs/`。`docs/Linux命令速查卡.md` 继续跟踪。
 
 ## 环境准备
 

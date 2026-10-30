@@ -82,6 +82,12 @@ runs/
 *.tflite
 
 # ---------- 数组 / 日志 / 临时文件 ----------
+# 私人学习笔记留在本机；共享的项目说明仍放在 dsp-toolbox/docs/。
+/docs/学习笔记*.md
+
+# 演示生成的图片与音频放在此处，不提交到仓库。
+/dsp-toolbox/outputs/
+
 # DSP 实验里用 np.save / np.savez 落盘的数组：体积大，且随时能重算
 *.npy
 *.npz

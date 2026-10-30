@@ -172,28 +172,30 @@ dsp-toolbox/
 ├── SPEC.md                     ← 本文件
 ├── README.md
 ├── pyproject.toml
-├── .gitignore
 ├── dsp_toolbox/
 │   ├── __init__.py
-│   ├── conv.py  signals.py  fft.py  filters.py
-│   ├── resample.py  spectrum.py  adaptive.py  dtmf.py
+│   ├── conv.py  signals.py  fft.py  filters.py  resample.py  dtmf.py
+│   └── spectrum.py  adaptive.py      ← 后续实现，当前不放空文件
 ├── tests/
-│   ├── test_conv.py  test_fft.py  test_filters.py  test_resample.py
-│   ├── test_spectrum.py  test_adaptive.py  test_dtmf.py
+│   ├── test_conv.py  test_fft.py  test_filters.py  test_resample.py  test_dtmf.py
+│   └── test_spectrum.py  test_adaptive.py  ← 随新模块一起添加
 ├── csrc/                       ← v1.0（W7）加入
 │   ├── CMakeLists.txt
-│   ├── include/dsp/{conv,fft,fir,lms}.h
-│   ├── src/{conv,fft,fir,lms}.c
-│   ├── tests/                  ← 读 golden/*.npy 与 C 输出对拍
-│   └── bench/                  ← 输出性能 CSV
+│   ├── include/dsp/fir.h
+│   ├── src/fir.c
+│   ├── examples/demo_gain.c
+│   └── include/dsp/ 与 src/     ← 后续增加 conv、fft、lms
 ├── golden/                     ← v1.0 加入：C/Python 对拍用的固定输入与期望输出
 ├── docs/
 │   ├── formulas.md             ← 公式速查（面试前直接翻这个）
 │   ├── bench.md                ← 性能与精度对比表
-│   └── failure_modes.md        ← 每个算法什么时候会失效
-└── examples/
-    └── dtmf_demo.py
+│   ├── failure_modes.md        ← 每个算法什么时候会失效
+│   └── images/                 ← 报告引用、随代码提交的图片
+├── examples/                   ← 演示脚本；导入时不运行
+└── outputs/                    ← 演示输出；自动创建，不提交
 ```
+
+仓库根目录另设 `exercises/c/` 保存独立的 C 语法与算法练习；它们不编入 DSP 库。个人学习笔记留在根目录 `docs/`，由 `.gitignore` 排除。`spectrum.py`、`adaptive.py` 和其余 C 算法的位置已经约定，实施时再添加真实代码与测试。
 
 ---
 
