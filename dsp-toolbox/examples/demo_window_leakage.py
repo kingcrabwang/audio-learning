@@ -21,15 +21,15 @@ def main(argv=None):
     sr = 8192
     single_freq = 1005
     lengths = (1024, 2048)
-    names = ("矩形窗", "Hann 窗", "Hamming 窗")
+    names = ("Rectangular", "Hann", "Hamming")
     plot_data = {}
 
     for n in lengths:
         signal = sine_wave(single_freq, sr, n / sr, amplitude=0.5)
         windows = {
-            "矩形窗": np.ones(n),
-            "Hann 窗": np.hanning(n),
-            "Hamming 窗": np.hamming(n),
+            "Rectangular": np.ones(n),
+            "Hann": np.hanning(n),
+            "Hamming": np.hamming(n),
         }
         for name, window in windows.items():
             spectrum = myfft(signal * window)
@@ -47,9 +47,9 @@ def main(argv=None):
             ax.plot(freqs, db)
             ax.set_xlim(800, 1200)
             ax.set_ylim(-100, 0)
-            ax.set_title(f"{n} 点 · {name}")
-            ax.set_xlabel("频率 (Hz)")
-            ax.set_ylabel("幅度 (dB)")
+            ax.set_title(f"{n} points · {name}")
+            ax.set_xlabel("Frequency (Hz)")
+            ax.set_ylabel("Magnitude (dB)")
             ax.grid(True)
     fig.tight_layout()
 

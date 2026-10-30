@@ -19,7 +19,11 @@ __all__ = ["time_axis", "sine_wave", "chirp_wave"]
 
 def time_axis(duration, sr):
     """按指定采样率生成时间轴，样本数四舍五入取整。"""
-    if not np.isfinite(sr) or sr <= 0 or int(sr) != sr:
+    if (
+        isinstance(sr, (bool, np.bool_))
+        or not isinstance(sr, (int, np.integer))
+        or sr <= 0
+    ):
         raise ValueError("sr 必须是正整数")
 
     if not np.isfinite(duration) or duration <= 0:
@@ -41,6 +45,8 @@ def sine_wave(freq, sr, duration, amplitude=0.5):
     duration : float  时长，秒
     amplitude : float 振幅，默认 0.5
     """
+    if not np.isfinite(freq) or not np.isfinite(amplitude):
+        raise ValueError("freq 和 amplitude 必须是有限数")
     t = time_axis(duration, sr)
     return amplitude * np.sin(2 * np.pi * freq * t)
 
@@ -59,6 +65,8 @@ def chirp_wave(f0, f1, sr, duration, amplitude=0.5):
     duration : float  时长，秒
     amplitude : float 振幅，默认 0.5
     """
+    if not np.isfinite(f0) or not np.isfinite(f1) or not np.isfinite(amplitude):
+        raise ValueError("f0、f1 和 amplitude 必须是有限数")
     t = time_axis(duration, sr)
     phase = 2 * np.pi * (f0 * t + (f1 - f0) / (2 * duration) * t ** 2)
     return amplitude * np.sin(phase)

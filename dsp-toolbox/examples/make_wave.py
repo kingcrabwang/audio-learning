@@ -23,7 +23,6 @@ import soundfile as sf
 from dsp_toolbox import chirp_wave, sine_wave
 
 SAMPLES = Path(__file__).resolve().parent.parent / "samples"
-SAMPLES.mkdir(exist_ok=True)
 
 __all__ = ["build_parser", "main"]
 
@@ -66,6 +65,7 @@ def main(argv=None):
         signal = chirp_wave(args.f0, args.f1, args.sr, duration, args.amplitude)
 
     out = SAMPLES / (args.out or DEFAULT_OUT[args.kind])
+    SAMPLES.mkdir(exist_ok=True)
     sf.write(str(out), signal, args.sr, subtype="PCM_16")
     print(f"已生成 {out}（{len(signal)} 点，{len(signal) / args.sr:.3f} 秒）")
     return 0
